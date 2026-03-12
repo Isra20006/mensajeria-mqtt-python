@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Chat MQTT - Proyecto Unidad 2</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/4.3.7/mqtt.min.js"></script>
+    <style>
+        body { font-family: sans-serif; display: flex; justify-content: center; background: #f0f2f5; }
+        .chat-container { width: 400px; margin-top: 50px; background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        #log { height: 300px; border: 1px solid #ddd; overflow-y: auto; margin-bottom: 10px; padding: 10px; background: #fafafa; border-radius: 5px; }
+        .input-area { display: flex; gap: 10px; }
+        input { flex-grow: 1; padding: 10px; border: 1px solid #ddd; border-radius: 5px; }
+        button { padding: 10px 20px; background: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .msg { margin-bottom: 8px; padding: 5px 10px; border-radius: 5px; background: #e9ecef; }
+    </style>
+</head>
+<body>
+
+<div class="chat-container">
+    <h3>💬 Mi Chat MQTT</h3>
+    <div id="log"><i>Conectando al servidor...</i></div>
+    
+    <div class="input-area">
+        <input type="text" id="mensaje" placeholder="Escribe un mensaje...">
+        <button onclick="enviarMensaje()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    // IMPORTANTE: El topic debe ser el mismo que en tu Chat.py
+    const TOPIC = "facultad/proyecto/isra";
+    const client = mqtt.connect('wss://broker.hivemq.com:8000/mqtt');
+
+    const log = document.getElementById('log');
+    const input = document.getElementById('mensaje');
+
+    client.on('connect', () => {
+        client.subscribe(TOPIC);
+        log.innerHTML = '<p> style="color:green">✅ Conectado al Chat</p>';
+    });
+
+    // Recibir mensajes
+    client.on('message', (topic, message) => {
+        const div = document.createElement('div');
+        div.className = 'msg';
+        div.innerText = message.toString();
+        log.appendChild(div);
+        log.scrollTop = log.scrollHeight; // Auto-scroll al final
+    });
+
+    // Enviar mensajes
+    function enviarMensaje() {
+        const texto = input.value;
+        if (texto) {
+            client.publish(TOPIC, texto);
+            input.value = ''; // Limpiar caja
+        }
+    }
+
+    // Enviar con la tecla Enter
+    input.addEventListener("keypress", (e) => {
+        if (e.key === "Enter") enviarMensaje();
+    });
+</script>
+
+</body>
+</html>
